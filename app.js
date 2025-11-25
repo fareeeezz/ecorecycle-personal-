@@ -1,7 +1,7 @@
 // --- Constants (can be shown in report) ---
 const RATE_PER_KG = 0.30;   // RM per kg
 const POINTS_PER_KG = 10;   // points per kg
-const ADMIN_WA_NUMBER = "60123456789"; 
+const ADMIN_WA_NUMBER = "60182177535"; 
 // tukar ke nombor WhatsApp owner sebenar, format: negara + nombor, tanpa + dan tanpa 0 depan
 // contoh Malaysia: 60 + 12xxxxxxx -> 6012xxxxxxx
 
@@ -91,31 +91,54 @@ function displayCalculation() {
     return;
   }
 
-  const user = reqData.user;
+  const user = reqData.user; // object dari localStorage
   const request = new PickupRequest(user, reqData.material, reqData.weightKg);
   const result = IncentiveCalculator.calculate(request);
 
   const totalRM = result.totalIncentive.toFixed(2);
   const totalPoints = result.points.toFixed(0);
 
-  const emailMsg = `
-Kepada ${user.name} (${user.email}),
-Terima kasih kerana menghantar ${request.material} seberat ${request.weightKg} kg.
-Anda menerima insentif sebanyak RM ${totalRM} dan ${totalPoints} mata ganjaran.
+  // --- Teks resit untuk preview / print ---
+  const receiptText = `
+RESIT PICKUP ECORCYCLE
+
+Nama          : ${user.name}
+Emel          : ${user.email}
+Jenis barang  : ${request.material}
+Berat         : ${request.weightKg} kg
+Insentif      : RM ${totalRM}
+Mata ganjaran : ${totalPoints}
+
+Terima kasih kerana menyokong kitar semula.
   `.trim();
 
-  const whatsappMsg = `
-EcoRecycle: Terima kasih ${user.name}! Pickup untuk ${request.material} (${request.weightKg} kg) diterima.
-Insentif: RM ${totalRM}. Mata: ${totalPoints}.
-  `.trim();
+  // --- Mesej WhatsApp ke owner (alamat dibiarkan kosong) ---
+  const waMessage = `
+EcoRecycle Pickup Request
 
+Nama: ${user.name}
+Emel: ${user.email}
+Jenis barang: ${request.material}
+Berat: ${request.weightKg} kg
+Insentif: RM ${totalRM}
+Mata ganjaran: ${totalPoints}
+Alamat: 
+  `.trim(); // user akan isi address lepas "Alamat: "
+
+  const waUrl = `https://wa.me/${ADMIN_WA_NUMBER}?text=${encodeURIComponent(waMessage)}`;
+
+  // --- Papar dalam HTML ---
   container.innerHTML = `
     <div class="row justify-content-center">
       <div class="col-md-8">
-        <h2 class="mb-4 text-center">Hasil Kiraan Insentif</h2>
-        <div class="card shadow-sm mb-4">
+        <h2 class="mb-4 text-center">Resit & WhatsApp</h2>
+
+        <!-- Card ringkasan resit -->
+        <div class="card shadow-sm mb-4" id="receiptCard">
           <div class="card-body">
+            <h5 class="card-title">Resit Pickup</h5>
             <p><strong>Nama:</strong> ${user.name}</p>
+            <p><strong>Emel:</strong> ${user.email}</p>
             <p><strong>Jenis Barang:</strong> ${request.material}</p>
             <p><strong>Berat:</strong> ${request.weightKg} kg</p>
             <hr>
@@ -124,21 +147,38 @@ Insentif: RM ${totalRM}. Mata: ${totalPoints}.
           </div>
         </div>
 
-        <h4 class="mb-3">Notifikasi (Output Preview)</h4>
+        <!-- Teks resit untuk copy / simpan -->
         <div class="mb-3">
-          <label class="form-label">Emel kepada pengguna</label>
-          <textarea class="form-control" rows="4" readonly>${emailMsg}</textarea>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">WhatsApp kepada pengguna</label>
-          <textarea class="form-control" rows="3" readonly>${whatsappMsg}</textarea>
+          <label class="form-label">Teks Resit (boleh copy / simpan)</label>
+          <textarea class="form-control" rows="7" readonly>${receiptText}</textarea>
         </div>
 
-        <a href="request.html" class="btn btn-outline-success w-100 mt-3">Buat Request Baru</a>
+        <!-- Seksyen WhatsApp -->
+        <h4 class="mb-3">Hantar ke WhatsApp Owner</h4>
+        <p class="text-muted">
+          Bila tekan butang di bawah, WhatsApp akan terbuka dengan mesej yang sudah diisi
+          (nama, emel, jenis barang, berat, harga, mata ganjaran).
+          Bahagian <strong>"Alamat:"</strong> dibiarkan kosong supaya anda boleh isi alamat lengkap
+          sebelum tekan butang send.
+        </p>
+
+        <a href="${waUrl}" target="_blank" class="btn btn-success w-100 mb-2">
+          Buka WhatsApp &amp; Isi Alamat
+        </a>
+
+        <!-- Print / save sebagai PDF -->
+        <button class="btn btn-outline-secondary w-100 mb-2" onclick="window.print()">
+          Print / Save Resit sebagai PDF
+        </button>
+
+        <a href="request.html" class="btn btn-outline-success w-100 mt-2">
+          Buat Request Baru
+        </a>
       </div>
     </div>
   `;
 }
+
 
 // --- Attach events based on current page (very simple MVC-style Controller) ---
 
