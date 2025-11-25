@@ -1,6 +1,9 @@
 // --- Constants (can be shown in report) ---
 const RATE_PER_KG = 0.30;   // RM per kg
 const POINTS_PER_KG = 10;   // points per kg
+const ADMIN_WA_NUMBER = "60123456789"; 
+// tukar ke nombor WhatsApp owner sebenar, format: negara + nombor, tanpa + dan tanpa 0 depan
+// contoh Malaysia: 60 + 12xxxxxxx -> 6012xxxxxxx
 
 // --- OOP CLASSES ---
 
